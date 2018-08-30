@@ -29,7 +29,7 @@ import qualified Numeric as N
 -- >>> instance Arbitrary a => Arbitrary (List a) where arbitrary = P.fmap ((P.foldr (:.) Nil) :: ([a] -> List a)) arbitrary
 
 -- BEGIN Helper functions and data types
-
+  
 -- The custom list type
 data List t =
   Nil
