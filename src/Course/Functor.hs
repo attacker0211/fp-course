@@ -10,8 +10,6 @@ import Course.Optional
 import Course.List
 import qualified Prelude as P(fmap)
 
--- cabal test tasty --show-detail=direct --test-option=--pattern="Tests.Functor."
-
 -- | All instances of the `Functor` type-class must satisfy two laws. These laws
 -- are not checked by the compiler. These laws are given as:
 --
@@ -57,7 +55,7 @@ instance Functor List where
     (a -> b)
     -> List a
     -> List b
-  (<$>) = map
+  (<$>) f = foldRight(\x xs -> (f x):.xs) Nil
 
 -- | Maps a function on the Optional functor.
 --
@@ -71,8 +69,9 @@ instance Functor Optional where
     (a -> b)
     -> Optional a
     -> Optional b
-  (<$>) f Empty = Empty 
-  (<$>) f (Full x) = Full (f x)
+  (<$>) _ Empty = Empty
+  (<$>) f (Full a) = Full (f a)
+
 
 -- | Maps a function on the reader ((->) t) functor.
 --
@@ -98,9 +97,7 @@ instance Functor ((->) t) where
   a
   -> f b
   -> f a
-(<$) = 
-  error "todo: Course.Functor#(<$)"
-
+(<$) = (<$>) . const
 -- | Anonymous map producing unit value.
 --
 -- >>> void (1 :. 2 :. 3 :. Nil)
@@ -118,8 +115,7 @@ void ::
   Functor f =>
   f a
   -> f ()
-void =
-  error "todo: Course.Functor#void"
+void = (<$) ()
 
 -----------------------
 -- SUPPORT LIBRARIES --

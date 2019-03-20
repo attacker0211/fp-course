@@ -29,7 +29,7 @@ import qualified Numeric as N
 -- >>> instance Arbitrary a => Arbitrary (List a) where arbitrary = P.fmap ((P.foldr (:.) Nil) :: ([a] -> List a)) arbitrary
 
 -- BEGIN Helper functions and data types
-  
+
 -- The custom list type
 data List t =
   Nil
@@ -40,7 +40,7 @@ data List t =
 infixr 5 :.
 
 instance Show t => Show (List t) where
-  show = show . foldRight (:) []
+  show = show . hlist
 
 -- The list of integers from zero to infinity.
 infinity ::
@@ -58,13 +58,25 @@ foldLeft :: (b -> a -> b) -> b -> List a -> b
 foldLeft _ b Nil      = b
 foldLeft f b (h :. t) = let b' = f b h in b' `seq` foldLeft f b' t
 
+-- END Helper functions and data types
 
+-- | Returns the head of the list or the given default.
+--
+-- >>> headOr 3 (1 :. 2 :. Nil)
+-- 1
+--
+-- >>> headOr 3 Nil
+-- 3
+--
+-- prop> \x -> x `headOr` infinity == 0
+--
+-- prop> \x -> x `headOr` Nil == x
 headOr ::
   a
   -> List a
   -> a
-headOr a Nil = a 
-headOr _ (a:._) = a 
+headOr a Nil = a
+headOr _ (x:._) = x 
 
 -- | The product of the elements of a list.
 --
@@ -80,7 +92,6 @@ product ::
   List Int
   -> Int
 product = foldLeft (*) 1
-
 -- | Sum the elements of the list.
 --
 -- >>> sum (1 :. 2 :. 3 :. Nil)
@@ -93,9 +104,7 @@ product = foldLeft (*) 1
 sum ::
   List Int
   -> Int
--- sum li = foldLeft (\a b -> a + b) 0 li
 sum = foldLeft (+) 0
-
 
 -- | Return the length of the list.
 --
@@ -106,7 +115,7 @@ sum = foldLeft (+) 0
 length ::
   List a
   -> Int
-length li = foldLeft (\a b -> a + 1) 0 li
+length = foldLeft (const . (+ 1)) 0 
 
 -- | Map the given function on each element of the list.
 --
@@ -120,14 +129,10 @@ map ::
   (a -> b)
   -> List a
   -> List b
--- map _ Nil = Nil 
--- map f (t:rest) = (f t) :. 
-map f li = foldRight( \elem rest -> (f elem):.rest) Nil li
--- map f li = foldLeft(\rest elem -> (f elem):.rest) Nil li
-
+map f a = foldRight (\x xs -> (f x):.xs) Nil a
 -- | Return elements satisfying the given predicate.
 --
-  -- >>> filter even (1 :. 2 :. 3 :. 4 :. 5 :. Nil)
+-- >>> filter even (1 :. 2 :. 3 :. 4 :. 5 :. Nil)
 -- [2,4]
 --
 -- prop> \x -> headOr x (filter (const True) infinity) == 0
@@ -140,7 +145,7 @@ filter ::
   -> List a
   -> List a
 filter _ Nil = Nil 
-filter f (x:.xs) = if (f x) then x:.(filter f xs) else filter f xs 
+filter f (x:.xs) = if (f x) then x:.(filter f xs) else filter f xs
 -- | Append two lists to a new list.
 --
 -- >>> (1 :. 2 :. 3 :. Nil) ++ (4 :. 5 :. 6 :. Nil)
@@ -157,9 +162,8 @@ filter f (x:.xs) = if (f x) then x:.(filter f xs) else filter f xs
   List a
   -> List a
   -> List a
-(++) Nil a = a 
--- (++) (x:.xs) b = x:.(xs ++ b)
-(++) a b = foldRight (:.) b a 
+(++) a b = foldRight (\x xs -> x:.xs) b a
+
 infixr 5 ++
 
 -- | Flatten a list of lists to a list.
@@ -175,9 +179,9 @@ infixr 5 ++
 flatten ::
   List (List a)
   -> List a
-flatten Nil = Nil 
-flatten (x:.xs) = x ++ flatten xs  
-
+-- flatten Nil = Nil 
+-- flatten (x:.xs) = x ++ flatten xs
+flatten = foldRight (++) Nil
 -- | Map a function then flatten to a list.
 --
 -- >>> flatMap (\x -> x :. x + 1 :. x + 2 :. Nil) (1 :. 2 :. 3 :. Nil)
@@ -193,7 +197,7 @@ flatMap ::
   -> List a
   -> List b
 flatMap _ Nil = Nil
-flatMap f (x:.xs) = f x ++ flatMap f xs 
+flatMap f (x:.xs) = f x ++ flatMap f xs
 
 -- | Flatten a list of lists to a list (again).
 -- HOWEVER, this time use the /flatMap/ function that you just wrote.
@@ -202,11 +206,11 @@ flatMap f (x:.xs) = f x ++ flatMap f xs
 flattenAgain ::
   List (List a)
   -> List a
-flattenAgain = flatMap id 
+flattenAgain = flatMap id
 
 -- | Convert a list of optional values to an optional list of values.
 --
--- * If the list contains all `Full` values, 
+-- * If the list contains all `Full` values,
 -- then return `Full` list of values.
 --
 -- * If the list contains one or more `Empty` values,
@@ -234,6 +238,7 @@ seqOptional l = foldRight combine (Full Nil) l where
   combine (Full x) (Full y) = Full (x:.y)
   combine _ _ = Empty 
 
+
 -- | Find the first element in the list matching the predicate.
 --
 -- >>> find even (1 :. 3 :. 5 :. Nil)
@@ -250,14 +255,12 @@ seqOptional l = foldRight combine (Full Nil) l where
 --
 -- >>> find (const True) infinity
 -- Full 0
-
 find ::
   (a -> Bool)
   -> List a
   -> Optional a
-find _ Nil = Empty
-find f (x:.xs) = if (f x) then (Full x) else find f xs 
-
+find _ Nil = Empty 
+find f (x:.xs) = if (f x) then (Full x) else find f xs
 -- | Determine if the length of the given list is greater than 4.
 --
 -- >>> lengthGT4 (1 :. 3 :. 5 :. Nil)
@@ -274,9 +277,9 @@ find f (x:.xs) = if (f x) then (Full x) else find f xs
 lengthGT4 ::
   List a
   -> Bool
--- lengthGT4 li = if (length li > 4) then True else False
-lengthGT4 (_:._:._:._:._) = True 
+lengthGT4 (_:._:._:._:._) = True
 lengthGT4 _ = False
+
 -- | Reverse a list.
 --
 -- >>> reverse Nil
@@ -291,8 +294,8 @@ lengthGT4 _ = False
 reverse ::
   List a
   -> List a
-reverse Nil = Nil
-reverse li = foldLeft(\a b -> b:.a) Nil li
+reverse a = foldLeft (\x xs -> xs:.x) Nil a   
+
 -- | Produce an infinite `List` that seeds with the given value at its head,
 -- then runs the given function for subsequent elements
 --
@@ -319,7 +322,7 @@ produce f x = x :. produce f (f x)
 notReverse ::
   List a
   -> List a
-notReverse li = li
+notReverse a = a
 
 ---- End of list exercises
 

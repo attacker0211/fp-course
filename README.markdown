@@ -21,9 +21,7 @@ https://github.com/data61/fp-course.
 
 #### Introduction
 
-The course is structured according to a linear progression and uses the Haskell
-programming language to learn programming concepts pertaining to functional
-programming.
+The course is structured according to a linear progression and uses the Haskell programming language to learn programming concepts pertaining to functional programming.
 
 Exercises are annotated with a comment containing the word "Exercise." The existing code compiles, however answers have
 been replaced with a call to the Haskell `error` function and so the code will throw an exception if it is run. Some
@@ -381,7 +379,7 @@ The exercises in `Parser.hs` can be assisted by stating problems in a specific w
 |-----------|-----------------------------------|
 | and then  | `bindParser` `>>=`                |
 | always    | `valueParser` `pure`              |
-| or        | `\|\|\|`                             |
+| or        | `\|\|\|`                          |
 | 0 or many | `list`                            |
 | 1 or many | `list1`                           |
 | is        | `is`                              |
