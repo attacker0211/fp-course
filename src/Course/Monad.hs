@@ -37,7 +37,6 @@ instance Monad ExactlyOne where
     -> ExactlyOne a
     -> ExactlyOne b
   f =<< ExactlyOne a = f a
-
 -- | Binds a function on a List.
 --
 -- >>> (\n -> n :. n :. Nil) =<< (1 :. 2 :. 3 :. Nil)
@@ -155,9 +154,8 @@ infixl 1 >>=
   (b -> f c)
   -> (a -> f b)
   -> a
-  -> f c
-(<=<) =
-  error "todo: Course.Monad#(<=<)"
+  -> f c  
+(<=<) g h x = (h x >>= g)
 
 infixr 1 <=<
 

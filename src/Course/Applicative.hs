@@ -97,8 +97,7 @@ instance Applicative Optional where
     -> Optional a
     -> Optional b
   Empty <*> _ = Empty
-  Full _ <*> Empty = Empty
-  Full f <*> Full a = Full (f a)
+  Full f <*> a = P.fmap f a
 
 -- | Insert into a constant function.
 --
@@ -146,7 +145,7 @@ instance Applicative ((->) t) where
 --
 -- >>> lift2 (+) Empty (Full 8)
 -- Empty
---
+--(:.)(:.)
 -- >>> lift2 (+) length sum (listh [4,5,6])
 -- 18
 lift2 ::
@@ -159,25 +158,18 @@ lift2 f1 f2 f3 = f1 <$> f2 <*> f3
 
 -- | Apply a ternary function in the environment.
 -- /can be written using `lift2` and `(<*>)`./
---
 -- >>> lift3 (\a b c -> a + b + c) (ExactlyOne 7) (ExactlyOne 8) (ExactlyOne 9)
 -- ExactlyOne 24
---
 -- >>> lift3 (\a b c -> a + b + c) (1 :. 2 :. 3 :. Nil) (4 :. 5 :. Nil) (6 :. 7 :. 8 :. Nil)
 -- [11,12,13,12,13,14,12,13,14,13,14,15,13,14,15,14,15,16]
---
 -- >>> lift3 (\a b c -> a + b + c) (Full 7) (Full 8) (Full 9)
 -- Full 24
---
 -- >>> lift3 (\a b c -> a + b + c) (Full 7) (Full 8) Empty
 -- Empty
---
 -- >>> lift3 (\a b c -> a + b + c) Empty (Full 8) (Full 9)
 -- Empty
---
 -- >>> lift3 (\a b c -> a + b + c) Empty Empty (Full 9)
 -- Empty
---
 -- >>> lift3 (\a b c -> a + b + c) length sum product (listh [4,5,6])
 -- 138
 lift3 ::
@@ -248,22 +240,17 @@ lift1 a b = lift0 a <*> b
 
 -- | Apply, discarding the value of the first argument.
 -- Pronounced, right apply.
---
 -- >>> (1 :. 2 :. 3 :. Nil) *> (4 :. 5 :. 6 :. Nil)
 -- [4,5,6,4,5,6,4,5,6]
---
 -- >>> (1 :. 2 :. Nil) *> (4 :. 5 :. 6 :. Nil)
 -- [4,5,6,4,5,6]
---
 -- >>> (1 :. 2 :. 3 :. Nil) *> (4 :. 5 :. Nil)
 -- [4,5,4,5,4,5]
---
 -- >>> Full 7 *> Full 8
 -- Full 8
---
 -- prop> \a b c x y z -> (a :. b :. c :. Nil) *> (x :. y :. z :. Nil) == (x :. y :. z :. x :. y :. z :. x :. y :. z :. Nil)
---
 -- prop> \x y -> Full x *> Full y == Full y
+
 (*>) ::
   Applicative f =>
   f a
@@ -273,28 +260,23 @@ lift1 a b = lift0 a <*> b
 
 -- | Apply, discarding the value of the second argument.
 -- Pronounced, left apply.
---
 -- >>> (1 :. 2 :. 3 :. Nil) <* (4 :. 5 :. 6 :. Nil)
 -- [1,1,1,2,2,2,3,3,3]
---
 -- >>> (1 :. 2 :. Nil) <* (4 :. 5 :. 6 :. Nil)
 -- [1,1,1,2,2,2]
---
 -- >>> (1 :. 2 :. 3 :. Nil) <* (4 :. 5 :. Nil)
 -- [1,1,2,2,3,3]
---
 -- >>> Full 7 <* Full 8
 -- Full 7
---
 -- prop> \x y z a b c -> (x :. y :. z :. Nil) <* (a :. b :. c :. Nil) == (x :. x :. x :. y :. y :. y :. z :. z :. z :. Nil)
---
 -- prop> \x y -> Full x <* Full y == Full x
+
 (<*) ::
   Applicative f =>
   f b
   -> f a
   -> f b
-(<*) = lift2(const)
+(<*) = lift2(\a _ -> a)
 
 -- | Sequences a list of structures to a structure of list.
 --
@@ -339,10 +321,10 @@ replicateA ::
   Int
   -> f a
   -> f (List a)
-replicateA n f = foldRight(lift2(:.)) (pure Nil) (replicate n f)
+replicateA n a = foldRight (lift2(:.)) (pure Nil) (replicate n a)
 
 -- | Filter a list with a predicate that produces an effect.
---
+--(:.)(:.)(:.)(:.)(:.)(:.)(:.)(:.)(:.)(:.)
 -- >>> filtering (ExactlyOne . even) (4 :. 5 :. 6 :. Nil)
 -- ExactlyOne [4,6]
 --
@@ -366,8 +348,7 @@ filtering ::
   (a -> f Bool)
   -> List a
   -> f (List a)
-filtering =
-  error "todo: Course.Applicative#filtering"
+filtering g = foldRight (\a -> (lift2 (\b -> if b then (a:.) else id) (g a))) (pure Nil)
 
 -----------------------
 -- SUPPORT LIBRARIES --
