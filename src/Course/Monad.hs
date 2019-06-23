@@ -140,7 +140,7 @@ join a = id =<< a
   f a
   -> (a -> f b)
   -> f b
-f >>= g = join (g <$> f)
+x >>= y = join (y <$> x)
 
 infixl 1 >>=
 

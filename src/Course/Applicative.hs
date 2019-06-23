@@ -236,7 +236,7 @@ lift1 ::
   (a -> b)
   -> f a
   -> f b
-lift1 a b = lift0 a <*> b
+lift1 = (<$>)
 
 -- | Apply, discarding the value of the first argument.
 -- Pronounced, right apply.

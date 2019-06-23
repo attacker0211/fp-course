@@ -112,13 +112,15 @@ getFiles = sequence . (<$>) (getFile)
 run ::
   FilePath
   -> IO ()
-run a = printFiles (getFiles(lines (readFile a)))
+run fp = readFile fp >>= \fn -> getFiles (lines fn) >>= \f -> printFiles f
 
 -- /Tip:/ use @getArgs@ and @run@
 main ::
   IO ()
-main =
-  error "todo: Course.FileIO#main"
+main = getArgs >>= \x -> f x
+  where f (x:._) = run x
+      
+  
 
 ----
 
