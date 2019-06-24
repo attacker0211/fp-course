@@ -13,6 +13,7 @@ import Course.Functor
 import Course.Applicative
 import Course.Monad
 import qualified Data.Set as S
+import Data.Char(digitToInt)
 
 -- $setup
 -- >>> import Test.QuickCheck.Function
@@ -61,6 +62,16 @@ get = State (\x -> (x, x))
 --
 -- >>> runState (put 1) 0
 -- ((),1)
+mapFst :: (a -> b) -> (a, c) -> (b, c)
+mapFst f (a, c) = (f a, c)
+
+mapSnd :: (c -> d) -> (a, c) -> (a, d)
+mapSnd f (a, c) = (a, f c)
+
+-- f o g = f(g(x))
+add1 :: State Int a -> State Int a
+add1 (State f) = State (mapSnd (+ 1) . f)
+
 put ::
   s
   -> State s ()
@@ -132,7 +143,13 @@ findM ::
   (a -> f Bool)
   -> List a
   -> f (Optional a)
-findM = undefined
+findM _ Nil = pure Empty
+findM f (x:.xs) = (\b -> if b then (pure (Full x)) else (findM f xs)) =<< f x 
+
+-- findM f li = safeHead <$> filtering f li
+--   where
+--     safeHead (x :. _) = Full xBelow is my bank Information: 
+--     safeHead _ = Empty
 
 -- | Find the first element in a `List` that repeats.
 -- It is possible that no element repeats, hence an `Optional` result.
@@ -145,20 +162,29 @@ firstRepeat ::
   Ord a =>
   List a
   -> Optional a
-firstRepeat = undefined
-
+firstRepeat Nil = Empty
+firstRepeat (x:.xs) =  eval (run xs) (pure x)
+  where
+    run (y:.ys) = do
+      seen <- get
+      if elem y seen then pure (Full y)
+      else put (y:.seen) *> run ys
+    run _ = pure Empty
 -- | Remove all duplicate elements in a `List`.
 -- /Tip:/ Use `filtering` and `State` with a @Data.Set#Set@.
---
 -- prop> \xs -> firstRepeat (distinct xs) == Empty
---
 -- prop> \xs -> distinct xs == distinct (flatMap (\x -> x :. x :. Nil) xs)
 distinct ::
   Ord a =>
   List a
   -> List a
-distinct =
-  error "todo: Course.State#distinct"
+distinct li = listh . S.toList $ exec (run li) S.empty
+  where
+    run (x:.xs) = do
+      set <- get
+      if S.member x set then run xs
+      else put (S.insert x set) *> run xs
+    run _ = pure ()
 
 -- | A happy number is a positive integer, where the sum of the square of its digits eventually reaches 1 after repetition.
 -- In contrast, a sad number (not a happy number) is where the sum of the square of its digits never reaches 1
@@ -181,8 +207,23 @@ distinct =
 --
 -- >>> isHappy 44
 -- True
+sumsq :: Integer -> Integer
+sumsq 0 = 0
+sumsq x = (x `mod` 10)*(x `mod` 10) + sumsq (x `div` 10)
+
+square :: Int -> Int
+square = join (*)
+
 isHappy ::
-  Integer
+  Int
   -> Bool
-isHappy =
-  error "todo: Course.State#isHappy"
+isHappy a = case firstRepeat (produce (sum . ((square . digitToInt) <$>). show') a) of
+  Full 1 -> True
+  _ -> False
+
+  -- isHappy ::
+-- Integer
+-- -> Bool
+-- isHappy a = case firstRepeat (produce sumsq a) of
+--   Full 1 -> True
+--   _ -> False
