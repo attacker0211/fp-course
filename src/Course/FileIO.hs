@@ -118,7 +118,9 @@ run fp = readFile fp >>= \fn -> getFiles (lines fn) >>= \f -> printFiles f
 main ::
   IO ()
 main = getArgs >>= \x -> f x
-  where f (x:._) = run x
+  where
+    f Nil = run Nil
+    f (x:._) = run x
       
   
 

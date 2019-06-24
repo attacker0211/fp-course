@@ -55,7 +55,7 @@ eval f = fst . (runState f)
 -- (0,0)
 get ::
   State s s
-get = undefined
+get = State (\x -> (x, x))
 
 -- | A `State` where the resulting state is seeded with the given value.
 --
@@ -64,8 +64,7 @@ get = undefined
 put ::
   s
   -> State s ()
-put =
-  error "todo: Course.State#put"
+put x = State (\_ -> ((), x))
 
 -- | Implement the `Functor` instance for `State s`.
 --
@@ -76,8 +75,7 @@ instance Functor (State s) where
     (a -> b)
     -> State s a
     -> State s b
-  (<$>) =
-    error "todo: Course.State#(<$>)"
+  (<$>) f (State g) = State (\x -> mapF (g x)) where mapF (a, s') = (f a, s')
 
 -- | Implement the `Applicative` instance for `State s`.
 --
@@ -94,14 +92,12 @@ instance Applicative (State s) where
   pure ::
     a
     -> State s a
-  pure =
-    error "todo: Course.State pure#instance (State s)"
+  pure a = State (\x -> (a, x)) 
   (<*>) ::
     State s (a -> b)
     -> State s a
     -> State s b 
-  (<*>) =
-    error "todo: Course.State (<*>)#instance (State s)"
+  (<*>) (State f) (State g) = State (\x -> let (fx, x1) = f x; (h, x2) = g x1; in (fx h, x2))
 
 -- | Implement the `Bind` instance for `State s`.
 --
@@ -115,8 +111,7 @@ instance Monad (State s) where
     (a -> State s b)
     -> State s a
     -> State s b
-  (=<<) =
-    error "todo: Course.State (=<<)#instance (State s)"
+  (=<<) f (State p) = State (\x -> let (a, x1) = p x; State a1 = f a; in a1 x1)
 
 -- | Find the first element in a `List` that satisfies a given predicate.
 -- It is possible that no element is found, hence an `Optional` result.
@@ -137,8 +132,7 @@ findM ::
   (a -> f Bool)
   -> List a
   -> f (Optional a)
-findM =
-  error "todo: Course.State#findM"
+findM = undefined
 
 -- | Find the first element in a `List` that repeats.
 -- It is possible that no element repeats, hence an `Optional` result.
@@ -151,8 +145,7 @@ firstRepeat ::
   Ord a =>
   List a
   -> Optional a
-firstRepeat =
-  error "todo: Course.State#firstRepeat"
+firstRepeat = undefined
 
 -- | Remove all duplicate elements in a `List`.
 -- /Tip:/ Use `filtering` and `State` with a @Data.Set#Set@.
