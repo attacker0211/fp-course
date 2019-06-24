@@ -211,7 +211,7 @@ sumsq :: Integer -> Integer
 sumsq 0 = 0
 sumsq x = (x `mod` 10)*(x `mod` 10) + sumsq (x `div` 10)
 
-square :: Int -> Int
+square :: Integer -> Integer
 square = join (*)
 
 isHappy ::
@@ -221,9 +221,9 @@ isHappy a = case firstRepeat (produce (sum . ((square . digitToInt) <$>). show')
   Full 1 -> True
   _ -> False
 
-  -- isHappy ::
--- Integer
--- -> Bool
--- isHappy a = case firstRepeat (produce sumsq a) of
---   Full 1 -> True
---   _ -> False
+  isHappy ::
+Integer
+-> Bool
+isHappy a = case firstRepeat (produce sumsq a) of
+  Full 1 -> True
+  _ -> False
