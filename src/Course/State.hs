@@ -62,15 +62,6 @@ get = State (\x -> (x, x))
 --
 -- >>> runState (put 1) 0
 -- ((),1)
-mapFst :: (a -> b) -> (a, c) -> (b, c)
-mapFst f (a, c) = (f a, c)
-
-mapSnd :: (c -> d) -> (a, c) -> (a, d)
-mapSnd f (a, c) = (a, f c)
-
--- f o g = f(g(x))
-add1 :: State Int a -> State Int a
-add1 (State f) = State (mapSnd (+ 1) . f)
 
 put ::
   s
@@ -146,10 +137,6 @@ findM ::
 findM _ Nil = pure Empty
 findM f (x:.xs) = (\b -> if b then (pure (Full x)) else (findM f xs)) =<< f x 
 
--- findM f li = safeHead <$> filtering f li
---   where
---     safeHead (x :. _) = Full xBelow is my bank Information: 
---     safeHead _ = Empty
 
 -- | Find the first element in a `List` that repeats.
 -- It is possible that no element repeats, hence an `Optional` result.
@@ -211,19 +198,19 @@ sumsq :: Integer -> Integer
 sumsq 0 = 0
 sumsq x = (x `mod` 10)*(x `mod` 10) + sumsq (x `div` 10)
 
-square :: Integer -> Integer
+square :: Int -> Int
 square = join (*)
 
-isHappy ::
+isHappy' ::
   Int
   -> Bool
-isHappy a = case firstRepeat (produce (sum . ((square . digitToInt) <$>). show') a) of
+isHappy' a = case firstRepeat (produce (sum . ((square . digitToInt) <$>). show') a) of
   Full 1 -> True
   _ -> False
 
-  isHappy ::
-Integer
--> Bool
+isHappy ::
+  Integer
+  -> Bool
 isHappy a = case firstRepeat (produce sumsq a) of
   Full 1 -> True
   _ -> False
