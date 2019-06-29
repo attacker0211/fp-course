@@ -50,7 +50,8 @@ instance Extend List where
     (List a -> b)
     -> List a
     -> List b
-  (<<=) f x = undefined
+  (<<=) f (x:.xs) = listh [f (x:.xs)] ++ ((<<=) f xs)
+  (<<=) f Nil = Nil
 
 -- | Implement the @Extend@ instance for @Optional@.
 --
@@ -64,8 +65,8 @@ instance Extend Optional where
     (Optional a -> b)
     -> Optional a
     -> Optional b
-  (<<=) =
-    error "todo: Course.Extend (<<=)#instance Optional"
+  (<<=) f Empty = Empty
+  (<<=) f x = Full (f x)
 
 -- | Duplicate the functor using extension.
 --
@@ -84,5 +85,4 @@ cojoin ::
   Extend f =>
   f a
   -> f (f a)
-cojoin =
-  error "todo: Course.Extend#cojoin"
+cojoin g = id <<= g

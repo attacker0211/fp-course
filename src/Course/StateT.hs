@@ -273,6 +273,7 @@ instance Monad f => Applicative (OptionalT f) where
   -- (<*>) (OptionalT fab) (OptionalT fa) = OptionalT $ do
   -- fnOp <- fab
   -- optional (\f -> (f <$>) <$> a) (pure Empty) fnOp
+  
   -- Type: OptionalT f (a -> b) -> OptionalT f a -> OptionalT f b
   -- OptionalT ( f (OptionalT b) )
   -- OptionalT :: f (OptionalT a) -> OptionalT f a
