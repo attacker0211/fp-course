@@ -56,6 +56,7 @@ tok ::
 tok a = do
   spaces
   res <- a
+  spaces
   pure res
 
 -- | Write a function that parses the given char followed by 0 or more spaces.

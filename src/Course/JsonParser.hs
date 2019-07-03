@@ -226,7 +226,7 @@ jsonObject = betweenSepbyComma '{' '}' pobj
       pure (str, val)
 
 
-      -- | Parse a JSON array.
+-- | Parse a JSON array.
 --
 -- /Tip:/ Use `betweenSepbyComma` and `jsonValue`.
 --
